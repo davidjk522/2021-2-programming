@@ -86,8 +86,11 @@ int main()
 	int x, y;
 	int dx, dy;
 	BOOL bEnd;
+	
 
 	showcursor(FALSE);
+
+	clock_t start = clock(); // 시간 측정 시작
 
 	// 전체 무한 루프
 	for (;;)
@@ -165,19 +168,23 @@ int main()
 								ns[ny + dy][nx + dx] = EMPTY;
 							}
 							ns[ny + dy * 2][nx + dx * 2] = PACK;
-							any_movement++; //키보드 계속 누르고 있을 때 움직인 횟수로 카운트 되는 것을 막기위해서 여기에 입력
+							
 						}
 						else {
 							dx = dy = 0;
 						}
+
 					}
 					// 새 위치로 이동
 					nx += dx;
 					ny += dy;
-					
+
+					gotoxy(45, 12); //커서를 움직여 표시할 위치로 이동한다.
+					printf("이동 횟수는: %d", ++any_movement); //움직인 횟수 나타낸다.
+
 				}
-				gotoxy(45, 12); //커서를 움직여 표시할 위치로 이동한다.
-				printf("이동 횟수는: %d", any_movement); //움직인 횟수 나타낸다.
+				
+				
 
 				//재사용 기회 남았는지 없는지 알려줌
 				
@@ -243,6 +250,7 @@ int main()
 					if (ch == ESC)
 					{
 						showcursor(TRUE);
+						
 						return;
 					}
 
@@ -264,7 +272,11 @@ int main()
 						break;
 					}
 			}
-
+			clock_t end = clock();
+			int diff = end - start;
+			gotoxy(45, 18);
+			printf("총 걸린 시간: %4.2f 초", (double) (diff) / CLOCKS_PER_SEC);
+			
 				// 게임 끝 처리
 				bEnd = TRUE;
 				for (y = 0; y < 18; y++) 
@@ -283,6 +295,7 @@ int main()
 					clrscr();
 					putsxy(10, 10, "참 잘했어요. 다음 스테이지로 이동합니다.");
 					delay(2000);
+					
 					stage++;
 					if (stage == 3) stage = 0;
 					break;
