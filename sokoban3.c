@@ -80,13 +80,15 @@ int recordx = 0;
 int recordy = 0;
 int retry = 1; //재시도 횟수 한 번
 
+int pushed = 0; //상자가 이동 할 떄 밀렸으면 1 아니면 0. 재시도 구현하는 데 쓰임
+
 int main()
 {
 	int ch;
 	int x, y;
 	int dx, dy;
 	BOOL bEnd;
-	
+
 
 	showcursor(FALSE);
 
@@ -154,13 +156,16 @@ int main()
 				}
 
 				// 벽이 아니어야 한다.
-				if (ns[ny + dy][nx + dx] != WALL) {
+				if (ns[ny + dy][nx + dx] != WALL)
+				{
 
 					// 짐을 미는 경우
-					if (ns[ny + dy][nx + dx] == PACK) {
+					if (ns[ny + dy][nx + dx] == PACK)
+					{
 						// 그 다음 칸이 비어 있거나 창고여야 한다. 
-						if (ns[ny + dy * 2][nx + dx * 2] == EMPTY ||
-							ns[ny + dy * 2][nx + dx * 2] == DEPOT) {
+						if (ns[ny + dy * 2][nx + dx * 2] == EMPTY || ns[ny + dy * 2][nx + dx * 2] == DEPOT)
+							
+						{
 							if (arStage[stage][ny + dy][nx + dx] == DEPOT) {
 								ns[ny + dy][nx + dx] = DEPOT;
 							}
@@ -168,26 +173,32 @@ int main()
 								ns[ny + dy][nx + dx] = EMPTY;
 							}
 							ns[ny + dy * 2][nx + dx * 2] = PACK;
-							
+							pushed = 1;
 						}
-						else {
+
+						else
+						{
 							dx = dy = 0;
+							
+							pushed = 0;
+							any_movement--; // 바로 다음이 벽이 아닌 경우, 짐인 경우에도 다음다음칸이 빈공간이나 창고가 아닌경우 카운트 제외 연타 방지
 						}
 
 					}
 					// 새 위치로 이동
 					nx += dx;
 					ny += dy;
+					
 
 					gotoxy(45, 12); //커서를 움직여 표시할 위치로 이동한다.
 					printf("이동 횟수는: %d", ++any_movement); //움직인 횟수 나타낸다.
-
+					
 				}
-				
-				
+
+
 
 				//재사용 기회 남았는지 없는지 알려줌
-				
+
 				if (retry == 1)
 				{
 					gotoxy(45, 16);
@@ -205,104 +216,93 @@ int main()
 			else if ((ch == r) && (retry == 1))
 			{
 				retry = 0;
-				if (ns[ny + recordy][nx + recordx] == PACK)
+				if (ns[ny + recordy][nx + recordx] == PACK) //박스와 사람이 서로 이웃하고 있는 상황에서
 				{
-					ns[ny][nx] = PACK;
-					ns[ny + recordy][nx + recordx] = EMPTY;
-				}
 
-				if (ns[ny - recordy][nx - recordx] != WALL) {
-					// 짐을 미는 경우
-					if (ns[ny - recordy][nx - recordx] == PACK) {
-						// 그 다음 칸이 비어 있거나 창고여야 한다. 
-						if (ns[ny - recordy * 2][nx - recordx * 2] == EMPTY ||
-							ns[ny - recordy * 2][nx - recordx * 2] == DEPOT) {
-							if (arStage[stage][ny - recordy][nx - recordx] == DEPOT) {
-								ns[ny - recordy][nx - recordx] = DEPOT;
-							}
-							else {
-								ns[ny - recordy][nx - recordx] = EMPTY;
-							}
-							ns[ny - recordy * 2][nx - recordx * 2] = PACK;
-							
-						}
-						else {
-							recordx = recordy = 0;
-						}
-						
+					if (pushed == 1) //이전 시도에 박스가 이동했을 떄
+					{
+
+						ns[ny][nx] = PACK;
+						ns[ny + recordy][nx + recordx] = EMPTY;
 					}
+
+					else if (pushed == 0) //이전 시도에 박스가 밀리지 않았을 떄
+					{
+						ns[ny + recordy][nx + recordx] = PACK;
+						ns[ny][nx] = EMPTY;
+					}
+				}
 					// 새 위치로 이동
 					nx -= recordx;
 					ny -= recordy;
-					
+
 					gotoxy(45, 12); //커서를 움직여 표시할 위치로 이동한다.
 					printf("이동 횟수는: %d", --any_movement); //움직인 횟수 나타낸다. 여기는 한 번 수행 되고 나면 다시 수행이 안되므로 키보드가 계속 눌리는 걱정할 필요 없음
 
 					gotoxy(45, 16);
 					printf("재사용 기회 다 사용함 ");
-				}
+				
 
 			}
-			
+
 
 			else
 			{
-					if (ch == ESC)
-					{
-						showcursor(TRUE);
-						
-						return;
-					}
+				if (ch == ESC)
+				{
+					showcursor(TRUE);
 
-					if (ch == '1')
-					{
-						stage = 0;
-						break;
-					}
+					return;
+				}
 
-					if (ch == '2')
-					{
-						stage = 1;
-						break;
-					}
+				if (ch == '1')
+				{
+					stage = 0;
+					break;
+				}
 
-					if (ch == '3') 
-					{
-						stage = 2;
-						break;
-					}
+				if (ch == '2')
+				{
+					stage = 1;
+					break;
+				}
+
+				if (ch == '3')
+				{
+					stage = 2;
+					break;
+				}
 			}
 			clock_t end = clock();
 			int diff = end - start;
 			gotoxy(45, 18);
-			printf("총 걸린 시간: %4.2f 초", (double) (diff) / CLOCKS_PER_SEC);
-			
-				// 게임 끝 처리
-				bEnd = TRUE;
-				for (y = 0; y < 18; y++) 
+			printf("총 걸린 시간: %4.2f 초", (double)(diff) / CLOCKS_PER_SEC);
+
+			// 게임 끝 처리
+			bEnd = TRUE;
+			for (y = 0; y < 18; y++)
+			{
+				for (x = 0; x < 20; x++)
 				{
-					for (x = 0; x < 20; x++) 
+					if (ns[y][x] == DEPOT)
 					{
-						if (ns[y][x] == DEPOT) 
-						{
-							bEnd = FALSE;
-						}
+						bEnd = FALSE;
 					}
 				}
+			}
 
-				if (bEnd) 
-				{
-					clrscr();
-					putsxy(10, 10, "참 잘했어요. 다음 스테이지로 이동합니다.");
-					delay(2000);
-					
-					stage++;
-					if (stage == 3) stage = 0;
-					break;
-				}
+			if (bEnd)
+			{
+				clrscr();
+				putsxy(10, 10, "참 잘했어요. 다음 스테이지로 이동합니다.");
+				delay(2000);
+
+				stage++;
+				if (stage == 3) stage = 0;
+				break;
 			}
 		}
 	}
-
+}
 
 
