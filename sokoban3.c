@@ -77,7 +77,8 @@ int stage = 0;
 int any_movement = 0;  //총 움직인 횟수 계산하기
 
 int recordx = 0;
-int recordy = 0;
+int recordy = 0; //움직임의 방향을 기록해 나중에 재시도 기능 구현하는데 이용함
+
 int retry = 1; //재시도 횟수 한 번
 
 int pushed = 0; //상자가 이동 할 떄 밀렸으면 1 아니면 0. 재시도 구현하는 데 쓰임
@@ -100,6 +101,7 @@ int main()
 
 		// 게임판 초기화
 		memcpy(ns, arStage[stage], sizeof(ns));
+
 		for (y = 0; y < 18; y++) {
 			for (x = 0; x < 20; x++) {
 				// 주인공의 위치 찾아 놓는다.
@@ -228,9 +230,26 @@ int main()
 
 					else if (pushed == 0) //이전 시도에 박스가 밀리지 않았을 떄
 					{
+						if ((ns[ny + 2 * recordy][nx + 2 * recordx] == PACK) || (ns[ny + 2 * recordy][nx + 2 * recordx] == WALL)) /* 한 번 움직인 후 같은 방향으로 한 번 더 눌렀는데 이동이 불가능한 경우, 
+																																  이 상태에서 되돌리기를 하면 짐과 사람이 별개로 움직이는 문제 해결. */
+																																  
+						{
+							ns[ny][nx] = PACK;
+							ns[ny + recordy][nx + recordx] = EMPTY;
+						}
+						else
+						{
 						ns[ny + recordy][nx + recordx] = PACK;
 						ns[ny][nx] = EMPTY;
+						}
 					}
+
+				}
+				if (ns[ny + recordy][nx + recordx] == WALL) //벽에 붙어있는 방향으로 움직였을 때 카운트가 주는 거 방지
+				{
+					recordx = 0;
+					recordy = 0;
+					any_movement++;
 				}
 					// 새 위치로 이동
 					nx -= recordx;
@@ -304,5 +323,8 @@ int main()
 		}
 	}
 }
+
+
+
 
 
